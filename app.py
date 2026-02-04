@@ -10,7 +10,6 @@ from io import BytesIO
 # --- APP CONFIGURATION ---
 MODEL_ID = "gemini-3-flash-preview"  # Using the specific 3.0 Flash Preview model
 APP_TITLE = "Anant: Stockist & Invoice Extractor"
-GEMINI_API_KEY = "AIzaSyB76D3MOdCLyVZL7h6ihc5JcP9SknRy4aI"
 
 st.set_page_config(page_title=APP_TITLE, page_icon="📄")
 
