@@ -8,7 +8,7 @@ import tempfile
 from io import BytesIO
 
 # --- APP CONFIGURATION ---
-MODEL_ID = "gemini-3-flash-preview"  # Using the specific 3.0 Flash Preview model
+MODEL_ID = "gemini-2.0-flash-exp"  # Updated to latest fast model
 APP_TITLE = "Anant: Stockist & Invoice Extractor"
 
 st.set_page_config(page_title=APP_TITLE, page_icon="📄")
@@ -38,12 +38,12 @@ if uploaded_file is not None:
 
     st.info("Analyzing document... this may take a moment.")
 
-   try:
+    try:
         # 1. Upload file to Gemini
-        # FIX: Changed 'path' to 'file' below
+        # FIX: Using 'file=' parameter as required by the new SDK
         sample_file = client.files.upload(file=tmp_file_path)
 
-        # 2. Define the extraction schema
+        # 2. Define the extraction schema (Structured Output)
         prompt = """
         Extract the following information from this invoice document:
         1. Stockist Name
@@ -56,7 +56,7 @@ if uploaded_file is not None:
         Return the data in valid JSON format.
         """
 
-        # 3. Call Gemini 3.0 Flash
+        # 3. Call Gemini
         response = client.models.generate_content(
             model=MODEL_ID,
             contents=[sample_file, prompt],
@@ -88,7 +88,6 @@ if uploaded_file is not None:
             st.dataframe(df)
 
             # --- EXPORT TO EXCEL ---
-            # We create an in-memory Excel file for download
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Products')
@@ -106,15 +105,4 @@ if uploaded_file is not None:
             st.download_button(
                 label="📥 Download Extracted Data as Excel",
                 data=output,
-                file_name=f"Anant_{data.get('invoice_number', 'data')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        else:
-            st.warning("No product line items were detected.")
-
-    except Exception as e:
-        st.error(f"An error occurred: {str(e)}")
-    
-    finally:
-        # Cleanup: Remove temp file
-        os.unlink(tmp_file_path)
+                file_name=f"
