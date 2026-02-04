@@ -8,7 +8,7 @@ import tempfile
 from io import BytesIO
 
 # --- APP CONFIGURATION ---
-MODEL_ID = "gemini-2.0-flash-exp"
+MODEL_ID = "gemini-3.0-flash-preview"
 APP_TITLE = "Anant: Stockist & Invoice Extractor"
 
 st.set_page_config(page_title=APP_TITLE, page_icon="📄")
