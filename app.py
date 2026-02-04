@@ -38,13 +38,12 @@ if uploaded_file is not None:
 
     st.info("Analyzing document... this may take a moment.")
 
-    try:
+   try:
         # 1. Upload file to Gemini
-        # For PDFs, we upload to the File API. For images, we can do the same for consistency.
-        sample_file = client.files.upload(path=tmp_file_path)
+        # FIX: Changed 'path' to 'file' below
+        sample_file = client.files.upload(file=tmp_file_path)
 
-        # 2. Define the extraction schema (Structured Output)
-        # We tell Gemini exactly what JSON structure we want
+        # 2. Define the extraction schema
         prompt = """
         Extract the following information from this invoice document:
         1. Stockist Name
