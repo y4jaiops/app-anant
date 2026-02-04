@@ -8,7 +8,7 @@ import tempfile
 from io import BytesIO
 
 # --- APP CONFIGURATION ---
-MODEL_ID = "gemini-2.0-flash-exp"  # Updated to latest fast model
+MODEL_ID = "gemini-2.0-flash-exp"
 APP_TITLE = "Anant: Stockist & Invoice Extractor"
 
 st.set_page_config(page_title=APP_TITLE, page_icon="📄")
@@ -31,7 +31,7 @@ st.markdown("Upload an Invoice (Image or PDF) to extract: **Stockist, Retailer, 
 uploaded_file = st.file_uploader("Choose a file...", type=["jpg", "jpeg", "png", "pdf"])
 
 if uploaded_file is not None:
-    # Save uploaded file to a temporary path (Required for Gemini File API)
+    # Save uploaded file to a temporary path
     with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as tmp_file:
         tmp_file.write(uploaded_file.getvalue())
         tmp_file_path = tmp_file.name
@@ -39,11 +39,10 @@ if uploaded_file is not None:
     st.info("Analyzing document... this may take a moment.")
 
     try:
-        # 1. Upload file to Gemini
-        # FIX: Using 'file=' parameter as required by the new SDK
+        # 1. Upload file to Gemini (Using 'file' parameter)
         sample_file = client.files.upload(file=tmp_file_path)
 
-        # 2. Define the extraction schema (Structured Output)
+        # 2. Define the extraction schema
         prompt = """
         Extract the following information from this invoice document:
         1. Stockist Name
@@ -91,7 +90,6 @@ if uploaded_file is not None:
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Products')
-                # Add a metadata sheet for the other info
                 meta_df = pd.DataFrame([{
                     "Stockist": data.get("stockist_name"),
                     "Retailer": data.get("retailer_name"),
@@ -102,7 +100,22 @@ if uploaded_file is not None:
             
             output.seek(0)
             
+            # Safe filename construction
+            safe_inv_num = str(data.get('invoice_number', 'data')).replace('/', '_')
+            final_filename = f"Anant_{safe_inv_num}.xlsx"
+            
             st.download_button(
                 label="📥 Download Extracted Data as Excel",
                 data=output,
-                file_name=f"
+                file_name=final_filename,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        else:
+            st.warning("No product line items were detected.")
+
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+    
+    finally:
+        if os.path.exists(tmp_file_path):
+            os.unlink(tmp_file_path)
