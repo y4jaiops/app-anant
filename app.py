@@ -39,7 +39,7 @@ if uploaded_file is not None:
     st.info("Analyzing document... this may take a moment.")
 
     try:
-        # 1. Upload file to Gemini (Using 'file' parameter)
+        # 1. Upload file to Gemini
         sample_file = client.files.upload(file=tmp_file_path)
 
         # 2. Define the extraction schema
@@ -52,7 +52,7 @@ if uploaded_file is not None:
         5. Total Discount Amount (if any)
         6. A list of all Products, including Product Name, Quantity, Rate, and Net Amount.
 
-        Return the data in valid JSON format.
+        Return the data in valid JSON format. DO NOT use Markdown code blocks. Just return raw JSON.
         """
 
         # 3. Call Gemini
@@ -67,6 +67,14 @@ if uploaded_file is not None:
         # 4. Parse the JSON response
         data = json.loads(response.text)
 
+        # --- FIX: Handle List vs Dictionary ---
+        if isinstance(data, list):
+            if len(data) > 0:
+                data = data[0]
+            else:
+                data = {}
+        # --------------------------------------
+
         # Display Summary Data
         col1, col2 = st.columns(2)
         with col1:
@@ -75,9 +83,9 @@ if uploaded_file is not None:
             st.text_input("Retailer", data.get("retailer_name", "N/A"))
         with col2:
             st.subheader("🧾 Invoice Details")
-            st.text_input("Invoice #", data.get("invoice_number", "N/A"))
-            st.text_input("Date", data.get("invoice_date", "N/A"))
-            st.text_input("Total Discount", data.get("total_discount_amount", "0"))
+            st.text_input("Invoice #", str(data.get("invoice_number", "N/A")))
+            st.text_input("Date", str(data.get("invoice_date", "N/A")))
+            st.text_input("Total Discount", str(data.get("total_discount_amount", "0")))
 
         # Process Products into a DataFrame
         products = data.get("products", [])
